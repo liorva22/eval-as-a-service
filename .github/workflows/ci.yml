@@ -1,0 +1,45 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: eaas
+          POSTGRES_PASSWORD: eaas
+          POSTGRES_DB: eaas
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U eaas" --health-interval 2s --health-retries 30
+    env:
+      MOCK_MODE: "1"
+      DATABASE_URL: postgresql://eaas:eaas@localhost:5432/eaas
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: pytest -q
+      - run: python eval/judge_agreement.py
+
+  # Dogfood the action: the good model passes the gate, the regressed ones must be blocked.
+  eval-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: v2 passes the gate
+        uses: ./
+        with: { csv: examples/qa_v2.csv, rubric: examples/rubric.yaml, threshold: "0.85", mock-mode: "1" }
+      - name: v3 (verbosity regression) is blocked
+        id: v3
+        continue-on-error: true
+        uses: ./
+        with: { csv: examples/qa_v3.csv, rubric: examples/rubric.yaml, threshold: "0.85", mock-mode: "1" }
+      - name: assert v3 was blocked
+        if: steps.v3.outcome != 'failure'
+        run: echo "gate let a regression through" && exit 1
