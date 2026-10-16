@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eval-as-a-Service</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --text:#1d2330; --muted:#677084; --line:#e3e6ec; --good:#1a7f4b; --bad:#c0392b; --accent:#2f5bea; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px 24px; background:var(--card); border-bottom:1px solid var(--line); display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  h1 { font-size:18px; margin:0; } h2 { font-size:15px; margin:0 0 10px; }
+  main { padding:20px 24px; display:grid; gap:16px; grid-template-columns: 1fr 1fr; max-width:1400px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; min-width:0; }
+  .wide { grid-column: 1 / -1; }
+  .kpis { display:flex; gap:12px; flex-wrap:wrap; }
+  .kpi { flex:1; min-width:120px; } .kpi b { display:block; font-size:22px; } .kpi span { color:var(--muted); font-size:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; } th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; } .pass { color:var(--good); } .fail { color:var(--bad); }
+  select, input, button { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  button { background:var(--accent); color:#fff; border:none; cursor:pointer; }
+  form { display:flex; gap:8px; flex-wrap:wrap; align-items:center; } .muted { color:var(--muted); }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; padding:16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Eval-as-a-Service</h1>
+  <label>Experiment <select id="exp"></select></label>
+  <span class="muted" id="status"></span>
+</header>
+<main>
+  <section class="card wide"><div class="kpis" id="kpis"></div></section>
+  <section class="card"><h2>Score trend by version</h2><canvas id="trend" height="220"></canvas></section>
+  <section class="card"><h2 id="cmpTitle">New vs previous run: pass rate per check</h2><canvas id="cmp" height="220"></canvas></section>
+  <section class="card wide"><h2>Runs</h2><table id="runs"></table></section>
+  <section class="card wide"><h2 id="failTitle">Failing items (latest run)</h2><table id="fails"></table></section>
+  <section class="card wide">
+    <h2>Upload a run</h2>
+    <form id="upload">
+      <input name="experiment" placeholder="experiment" required>
+      <input name="model_label" placeholder="model label (e.g. v4)">
+      <label>CSV <input type="file" name="file" accept=".csv" required></label>
+      <label>Rubric <input type="file" name="rubricFile" accept=".yaml,.yml,.json" required></label>
+      <button>Upload &amp; score</button>
+      <span class="muted" id="uploadMsg"></span>
+    </form>
+  </section>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const pct = (x) => (x * 100).toFixed(1) + "%";
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let charts = {};
+const chart = (id, cfg) => { charts[id]?.destroy(); charts[id] = new Chart($(id), cfg); };
+
+async function load() {
+  const exps = await (await fetch("/api/experiments")).json();
+  const sel = $("exp"), keep = sel.value || new URLSearchParams(location.search).get("experiment");
+  sel.innerHTML = exps.map((e) => `<option>${esc(e.name)}</option>`).join("");
+  if (keep && exps.some((e) => e.name === keep)) sel.value = keep;
+  if (exps.length) await show(sel.value); else $("status").textContent = "No experiments yet: upload a run below.";
+}
+
+async function show(name) {
+  const runs = await (await fetch(`/api/experiments/${encodeURIComponent(name)}/runs`)).json();
+  const done = runs.filter((r) => r.status === "done");
+  const pending = runs.length - done.length;
+  $("status").textContent = pending ? `${pending} run(s) queued or running…` : "";
+  const latest = done.at(-1), prev = done.at(-2);
+  const delta = latest && prev ? latest.summary.score - prev.summary.score : null;
+  $("kpis").innerHTML = latest ? `
+    <div class="kpi"><b>${latest.summary.score.toFixed(3)}</b><span>latest score (v${latest.version} ${esc(latest.model_label)})</span></div>
+    <div class="kpi"><b>${pct(latest.summary.pass_rate)}</b><span>items passing every check</span></div>
+    <div class="kpi"><b class="${delta == null ? "" : delta >= 0 ? "pass" : "fail"}">${delta == null ? "–" : (delta >= 0 ? "+" : "") + delta.toFixed(3)}</b><span>score change vs previous run</span></div>
+    <div class="kpi"><b>${done.length}</b><span>completed runs</span></div>
+    <div class="kpi"><b>$${done.reduce((s, r) => s + r.summary.judge_cost_usd, 0).toFixed(4)}</b><span>total judge spend</span></div>` : "";
+
+  chart("trend", { type: "line", data: {
+      labels: done.map((r) => `v${r.version} ${r.model_label}`),
+      datasets: [
+        { label: "score", data: done.map((r) => r.summary.score), borderColor: "#2f5bea", tension: 0.2 },
+        { label: "pass rate", data: done.map((r) => r.summary.pass_rate), borderColor: "#1a7f4b", tension: 0.2 },
+      ] }, options: { scales: { y: { min: 0, max: 1 } } } });
+
+  if (latest) {
+    const checks = Object.keys(latest.summary.checks);
+    $("cmpTitle").textContent = prev ? `New (v${latest.version}) vs previous (v${prev.version}): pass rate per check` : "Pass rate per check";
+    chart("cmp", { type: "bar", data: { labels: checks, datasets: [
+        ...(prev ? [{ label: `v${prev.version} ${prev.model_label}`, data: checks.map((c) => prev.summary.checks[c]?.pass_rate ?? null), backgroundColor: "#b8c4d9" }] : []),
+        { label: `v${latest.version} ${latest.model_label}`, data: checks.map((c) => latest.summary.checks[c].pass_rate), backgroundColor: "#2f5bea" },
+      ] }, options: { scales: { y: { min: 0, max: 1 } } } });
+  }
+
+  $("runs").innerHTML = "<tr><th>version</th><th>label</th><th>status</th><th>score</th><th>pass rate</th><th>n</th><th>finished</th></tr>" +
+    runs.slice().reverse().map((r) => `<tr><td>v${r.version}</td><td>${esc(r.model_label)}</td><td>${r.status}${r.error ? ": " + esc(r.error) : ""}</td>
+      <td>${r.summary ? r.summary.score.toFixed(3) : ""}</td><td>${r.summary ? pct(r.summary.pass_rate) : ""}</td>
+      <td>${r.summary?.n ?? ""}</td><td>${r.finished_at ? new Date(r.finished_at).toLocaleString() : ""}</td></tr>`).join("");
+
+  if (latest) {
+    const items = await (await fetch(`/api/runs/${latest.id}/items?failed=true`)).json();
+    $("failTitle").textContent = `Failing items, v${latest.version} (${items.length})`;
+    $("fails").innerHTML = "<tr><th>id</th><th>prompt</th><th>output</th><th>failed checks</th></tr>" + items.slice(0, 25).map((it) =>
+      `<tr><td>${esc(it.data.id ?? it.idx)}</td><td>${esc(it.data.prompt)}</td><td>${esc(it.data.output).slice(0, 160)}</td>
+       <td class="fail">${Object.entries(it.result.checks).filter(([, v]) => !v.passed).map(([k, v]) => k + (v.raw ? ` (${v.raw}/5)` : "")).join(", ")}</td></tr>`).join("");
+  }
+  if (pending) setTimeout(() => show(name), 2000);
+}
+
+$("exp").onchange = (e) => show(e.target.value);
+$("upload").onsubmit = async (e) => {
+  e.preventDefault();
+  const f = new FormData(e.target), body = new FormData();
+  body.append("file", f.get("file"));
+  body.append("rubric", await f.get("rubricFile").text());
+  body.append("model_label", f.get("model_label"));
+  const r = await fetch(`/api/experiments/${encodeURIComponent(f.get("experiment"))}/runs`, { method: "POST", body });
+  const j = await r.json();
+  $("uploadMsg").textContent = r.ok ? `queued v${j.version}` : `error: ${j.detail}`;
+  if (r.ok) { $("exp").value = f.get("experiment"); await load(); $("exp").value = f.get("experiment"); show(f.get("experiment")); }
+};
+load();
+</script>
+</body>
+</html>
