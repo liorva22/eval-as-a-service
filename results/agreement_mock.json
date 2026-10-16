@@ -1,0 +1,86 @@
+{
+  "judge": "mock-token-recall",
+  "n": 60,
+  "human_positive_rate": 0.7333333333333333,
+  "judge_cost_usd": 0.0,
+  "llm_judge": {
+    "accuracy": 0.9,
+    "cohen_kappa": 0.7631578947368421,
+    "false_pass_rate": 0.0625,
+    "false_fail_rate": 0.11363636363636363,
+    "confusion": {
+      "tp": 39,
+      "fp": 1,
+      "fn": 5,
+      "tn": 15
+    }
+  },
+  "baseline_exact_match": {
+    "accuracy": 0.4666666666666667,
+    "cohen_kappa": 0.16666666666666663,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.7272727272727273,
+    "confusion": {
+      "tp": 12,
+      "fp": 0,
+      "fn": 32,
+      "tn": 16
+    }
+  },
+  "baseline_contains_reference": {
+    "accuracy": 0.9,
+    "cohen_kappa": 0.7715736040609138,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.13636363636363635,
+    "confusion": {
+      "tp": 38,
+      "fp": 0,
+      "fn": 6,
+      "tn": 16
+    }
+  },
+  "disagreements": [
+    {
+      "id": "q03",
+      "output": "Water boils at 100\u00b0C at sea level.",
+      "reference": "100 degrees Celsius",
+      "judge": 2,
+      "human": 1
+    },
+    {
+      "id": "q15",
+      "output": "Roughly 300,000 kilometers per second.",
+      "reference": "About 300,000 km per second (299,792 km/s)",
+      "judge": 3,
+      "human": 1
+    },
+    {
+      "id": "q22",
+      "output": "32\u00b0F.",
+      "reference": "32 degrees Fahrenheit",
+      "judge": 2,
+      "human": 1
+    },
+    {
+      "id": "q15",
+      "output": "About 299,792 kilometers per second.",
+      "reference": "About 300,000 km per second (299,792 km/s)",
+      "judge": 3,
+      "human": 1
+    },
+    {
+      "id": "q23",
+      "output": "Read-only Access Memory.",
+      "reference": "Random Access Memory",
+      "judge": 4,
+      "human": 0
+    },
+    {
+      "id": "q29",
+      "output": "There are eight bits in one byte.",
+      "reference": "8",
+      "judge": 1,
+      "human": 1
+    }
+  ]
+}

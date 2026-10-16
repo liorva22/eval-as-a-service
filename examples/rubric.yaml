@@ -1,0 +1,13 @@
+# Rubric for the QA demo. Item score = weighted mean of check scores; an item passes only if every check passes.
+checks:
+  - name: correct
+    type: llm_judge
+    criteria: "The output answers the prompt with the same factual answer as the reference. Extra correct detail is fine; a wrong or missing answer is not."
+    pass_at: 4      # judge score 1-5; >= 4 counts as a pass
+    weight: 3
+  - name: concise
+    type: max_length
+    value: 200
+  - name: no_boilerplate
+    type: not_contains
+    value: "as an AI language model"

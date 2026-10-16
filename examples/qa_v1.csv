@@ -1,0 +1,31 @@
+id,prompt,reference,output
+q01,What is the capital of Australia?,Canberra,The capital of Australia is Sydney.
+q02,Who wrote 'Pride and Prejudice'?,Jane Austen,Jane Austen wrote it.
+q03,What is the boiling point of water at sea level in Celsius?,100 degrees Celsius,Water boils at 100°C at sea level.
+q04,How many bones are in the adult human body?,206,Adults have around 300 bones.
+q05,What gas do plants absorb from the atmosphere for photosynthesis?,Carbon dioxide (CO2),Plants absorb oxygen for photosynthesis.
+q06,What is the time complexity of binary search?,O(log n),"Binary search runs in logarithmic time, O(log n)."
+q07,What does HTTP status code 404 mean?,Not Found: the server cannot find the requested resource.,404 means the server had an internal error.
+q08,What is the largest planet in the solar system?,Jupiter,Jupiter.
+q09,In what year did World War II end?,1945,World War II ended in 1945.
+q10,What is the chemical symbol for sodium?,Na,The symbol for sodium is So.
+q11,What does SQL stand for?,Structured Query Language,Structured Query Language.
+q12,Which language runs natively in web browsers?,JavaScript,Java runs natively in all web browsers.
+q13,What is the derivative of x^2?,2x,The derivative of x squared is 2x.
+q14,Who painted the Mona Lisa?,Leonardo da Vinci,Michelangelo painted the Mona Lisa.
+q15,"What is the speed of light in a vacuum, approximately?","About 300,000 km per second (299,792 km/s)","Roughly 300,000 kilometers per second."
+q16,What is the default port for HTTPS?,443,HTTPS uses port 80 by default.
+q17,What does CPU stand for?,Central Processing Unit,Central Processing Unit.
+q18,How many continents are there?,Seven,There are seven continents.
+q19,What is the square root of 144?,12,The square root of 144 is 14.
+q20,"Which data structure uses first-in, first-out order?",A queue,"A stack uses first-in, first-out ordering."
+q21,What is the main language spoken in Brazil?,Portuguese,Spanish is the main language of Brazil.
+q22,What is the freezing point of water in Fahrenheit?,32 degrees Fahrenheit,32°F.
+q23,What does RAM stand for?,Random Access Memory,Random Access Memory.
+q24,Who was the first person to walk on the Moon?,Neil Armstrong,Buzz Aldrin was the first person on the Moon.
+q25,What is 15% of 200?,30,15% of 200 is 30.
+q26,What is the powerhouse of the cell?,The mitochondria,The mitochondria.
+q27,What does JSON stand for?,JavaScript Object Notation,JavaScript Object Notation.
+q28,What is the tallest mountain above sea level?,Mount Everest,K2 is the tallest mountain above sea level.
+q29,How many bits are in a byte?,8,A byte is 8 bits.
+q30,What is the opposite of 'ancient'?,Modern,"It depends on context, but generally the opposite would be something old."
