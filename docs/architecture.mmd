@@ -1,0 +1,15 @@
+flowchart LR
+    user([User / browser]) -->|upload CSV + rubric| api[FastAPI API<br/>+ static dashboard]
+    cli([eaas CLI / GitHub Action]) -->|POST run, poll status| api
+    cli -.->|--local: no server| score
+    api -->|insert run + items, status=queued| pg[(Postgres<br/>experiments, runs, items)]
+    worker[Scoring worker<br/>N replicas] -->|claim: FOR UPDATE SKIP LOCKED| pg
+    worker --> score[Scoring engine]
+    score --> det[Deterministic checks<br/>contains, regex, length,<br/>json_valid, exact_match]
+    score --> judge[LLM judge 1-5]
+    judge -->|live| claude[(claude-sonnet-5-5)]
+    judge -.->|MOCK_MODE=1| mock[Reference-recall<br/>mock judge]
+    worker -->|item results + run summary| pg
+    pg -->|runs by version| api
+    api -->|trend + new-vs-old charts| user
+    cli -->|exit 1 if metric < threshold| gate{{Deploy gate}}
