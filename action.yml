@@ -1,0 +1,43 @@
+name: "EaaS eval gate"
+description: "Score a prompt/output CSV against a rubric and fail the job when the score is below a threshold."
+inputs:
+  csv:
+    description: "CSV with prompt, output and optional reference columns"
+    required: true
+  rubric:
+    description: "Rubric YAML/JSON file"
+    required: true
+  threshold:
+    description: "Minimum value of `metric` to pass"
+    required: true
+  metric:
+    description: "score (weighted mean) or pass_rate (share of items passing every check)"
+    default: "pass_rate"
+  server-url:
+    description: "EaaS server to record the run on (empty = score locally in the runner)"
+    default: ""
+  experiment:
+    description: "Experiment name (server mode)"
+    default: "ci"
+  model-label:
+    description: "Label for this run, e.g. the commit SHA (server mode)"
+    default: ""
+  mock-mode:
+    description: "1 = use the offline mock judge (no API key)"
+    default: "0"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+    - shell: bash
+      env:
+        MOCK_MODE: ${{ inputs.mock-mode }}
+        EAAS_SERVER: ${{ inputs.server-url }}
+      run: >
+        eaas run --csv "${{ inputs.csv }}" --rubric "${{ inputs.rubric }}"
+        --threshold "${{ inputs.threshold }}" --metric "${{ inputs.metric }}"
+        --experiment "${{ inputs.experiment }}" --model-label "${{ inputs.model-label }}"
