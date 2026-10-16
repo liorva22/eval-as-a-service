@@ -1,7 +1,7 @@
 """How often does the judge agree with a human? Compares judge pass/fail on the `correct` check with my hand labels.
 
 MOCK_MODE=1 python eval/judge_agreement.py   # lexical mock judge (no keys)
-python eval/judge_agreement.py               # Claude judge (~$0.05)
+python eval/judge_agreement.py               # Claude judge
 """
 
 import csv

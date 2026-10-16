@@ -73,7 +73,7 @@ A score-only gate at 0.80 would have **let v3 through** (0.807). Gating on pass 
 **Honest reading.**
 - These are the **mock** judge's numbers, not Claude's: no API key was available for this build. The lexical mock is no better than a plain substring check.
 - Its disagreements are the textbook failure modes: paraphrases ("eight bits" vs "8", "100°C" vs "100 degrees Celsius") and near-misses ("Read-only Access Memory").
-- Measuring the real judge is one command: `python eval/judge_agreement.py`, which costs about $0.05.
+- Measuring the real judge is one command: `python eval/judge_agreement.py`.
 - 60 labels from a single annotator on short factual QA is a smoke test, not a validation.
 
 ## Tech stack
