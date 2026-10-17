@@ -1,0 +1,20 @@
+{
+  "n": 30,
+  "score": 0.7200000000000001,
+  "pass_rate": 0.5333333333333333,
+  "judge_cost_usd": 0.015906,
+  "checks": {
+    "correct": {
+      "pass_rate": 0.5333333333333333,
+      "mean_score": 0.5333333333333333
+    },
+    "concise": {
+      "pass_rate": 1.0,
+      "mean_score": 1.0
+    },
+    "no_boilerplate": {
+      "pass_rate": 1.0,
+      "mean_score": 1.0
+    }
+  }
+}

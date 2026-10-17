@@ -17,14 +17,13 @@ See the README diagram. The API validates an upload and writes a queued run, wit
 - **Static dashboard** instead of a SPA: zero build, and the API is the product.
 
 ## What I'd do differently
-- **Measure the real judge.** No API key was available, so the reported agreement (90% accuracy, κ = 0.76 on 60 hand-labeled items) is for the *mock lexical judge*. Notably, it's no better than a "contains the reference" string check (90%, κ = 0.77). That's the point: lexical judges fail on paraphrases ("eight bits" vs "8") and pass near-misses ("Read-only Access Memory"). `python eval/judge_agreement.py` with a key measures Claude on the same 60 items.
-- **More, and independent, human labels.** 60 labels from one annotator (me) on short factual QA is a smoke test, not a validation. I'd use 2+ annotators, inter-annotator κ, and longer-form tasks where judges really diverge.
+- **Harder, independent judge validation.** The Claude Sonnet judge agreed 100% (κ = 1.00, $0.03) on 60 reference-labeled items, where the lexical mock was no better than a substring check (κ = 0.77). But short factual QA is easy, and the labels were written by an AI assistant during the build, so they may share the judge's blind spots. I'd use 2+ human annotators and longer-form tasks where judges really diverge.
 - **Store judge rationales and enable caching.** The rubric prefix is identical across items, so prompt caching would cut judge cost. Rationales make disagreements debuggable.
 - **Statistical comparisons.** Bootstrap confidence intervals on the v-new minus v-old delta, so a 1-point change on 30 items isn't treated as signal.
 - **Auth and multi-tenancy.** None exist today; anyone who can reach the API can upload.
 
 ## Interview talking points
 - Why pass rate beats mean score as a gate, shown with the v3 verbosity regression.
-- Judge validation: why I compare against trivial baselines (exact match, contains) and why the mock judge's κ = 0.76 isn't a win.
+- Judge validation: why I compare against trivial baselines (exact match, contains) and why the mock judge's κ = 0.76 isn't a win while the live judge's κ = 1.00 isn't proof either.
 - Postgres `SKIP LOCKED` as a queue: when it's enough and when to move to a broker.
 - A real race I hit (concurrent `CREATE TABLE IF NOT EXISTS`) and the advisory-lock fix.

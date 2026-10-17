@@ -1,0 +1,43 @@
+{
+  "judge": "claude-sonnet-5-5",
+  "n": 60,
+  "human_positive_rate": 0.7333333333333333,
+  "judge_cost_usd": 0.03078,
+  "llm_judge": {
+    "accuracy": 1.0,
+    "cohen_kappa": 1.0,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.0,
+    "confusion": {
+      "tp": 44,
+      "fp": 0,
+      "fn": 0,
+      "tn": 16
+    }
+  },
+  "baseline_exact_match": {
+    "accuracy": 0.4666666666666667,
+    "cohen_kappa": 0.16666666666666663,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.7272727272727273,
+    "confusion": {
+      "tp": 12,
+      "fp": 0,
+      "fn": 32,
+      "tn": 16
+    }
+  },
+  "baseline_contains_reference": {
+    "accuracy": 0.9,
+    "cohen_kappa": 0.7715736040609138,
+    "false_pass_rate": 0.0,
+    "false_fail_rate": 0.13636363636363635,
+    "confusion": {
+      "tp": 38,
+      "fp": 0,
+      "fn": 6,
+      "tn": 16
+    }
+  },
+  "disagreements": []
+}

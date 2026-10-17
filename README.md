@@ -54,27 +54,27 @@ checks:
 
 **Deploy gate on the demo data** (`--metric pass_rate --threshold 0.85`, as run in CI and for the screenshot):
 
-| Run | Score | Pass rate | Gate |
+| Run | Mock judge: score / pass rate | **Claude Sonnet 5.5 judge: score / pass rate** | Gate (both judges) |
 |---|---|---|---|
-| model-v1 (weaker answers) | 0.685 | 43.3% | **blocked** |
-| model-v2 | 0.940 | 90.0% | passed |
-| model-v3 (v2 + verbose boilerplate on 1/3 of answers) | 0.807 | 56.7% | **blocked** |
+| model-v1 (weaker answers) | 0.685 / 43.3% | 0.720 / 53.3% | **blocked** |
+| model-v2 | 0.940 / 90.0% | 0.960 / 93.3% | passed |
+| model-v3 (v2 + verbose boilerplate on 1/3 of answers) | 0.807 / 56.7% | 0.812 / 60.0% | **blocked** |
 
-A score-only gate at 0.80 would have **let v3 through** (0.807). Gating on pass rate caught it. That finding is why `pass_rate` is the default.
+A score-only gate at 0.80 would have **let v3 through** under either judge (0.807 mock, 0.812 live). Gating on pass rate caught it. That finding is why `pass_rate` is the default. Live gate runs: [`results/gate_live_v1.json`](results/gate_live_v1.json), [`v2`](results/gate_live_v2.json), [`v3`](results/gate_live_v3.json); judge cost $0.049 for all 90 items.
 
-**Judge agreement with human labels** (`MOCK_MODE=1 python eval/judge_agreement.py` → [`results/agreement_mock.json`](results/agreement_mock.json)). 60 items: 30 questions × v1/v2 answers, each labeled correct or incorrect by me (73% correct).
+**Judge agreement with reference labels** (`python eval/judge_agreement.py` → [`results/agreement_live.json`](results/agreement_live.json); `MOCK_MODE=1` → [`results/agreement_mock.json`](results/agreement_mock.json)). 60 items: 30 questions × v1/v2 answers, each labeled correct or incorrect against the reference answer (73% correct).
 
 | Method | Accuracy | Cohen's κ | False-pass rate | False-fail rate |
 |---|---|---|---|---|
+| **Claude Sonnet 5.5 judge (live, $0.031)** | **100.0%** | **1.00** | 0.0% | 0.0% |
 | Mock judge (reference-token recall) | 90.0% | 0.76 | 6.2% | 11.4% |
 | Baseline: exact match | 46.7% | 0.17 | 0.0% | 72.7% |
 | Baseline: output contains reference | 90.0% | 0.77 | 0.0% | 13.6% |
 
 **Honest reading.**
-- These are the **mock** judge's numbers, not Claude's: no API key was available for this build. The lexical mock is no better than a plain substring check.
-- Its disagreements are the textbook failure modes: paraphrases ("eight bits" vs "8", "100°C" vs "100 degrees Celsius") and near-misses ("Read-only Access Memory").
-- Measuring the real judge is one command: `python eval/judge_agreement.py`.
-- 60 labels from a single annotator on short factual QA is a smoke test, not a validation.
+- The Claude judge resolved every case the lexical judges get wrong: paraphrases ("eight bits" vs "8", "100°C" vs "100 degrees Celsius") and near-misses ("Read-only Access Memory"). The lexical mock is no better than a plain substring check.
+- A perfect score here says the task is easy for an LLM judge, not that the judge is perfect. These are short factual answers with unambiguous references.
+- The labels were written during the build by an AI coding assistant (Claude) checking each answer against its reference, not by an independent human annotator. A Claude judge agreeing with Claude-written labels can share blind spots, so treat this as a smoke test, not a validation.
 
 ## Tech stack
 
